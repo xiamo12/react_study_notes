@@ -87,6 +87,22 @@ export default myStyle;
 项目的jsx文件，假设路径名为：`src/components/Hello.jsx`
 
 ```javascript
-import myStyle from "./style.js"
+import myStyle from "./style.js";
+
+class Hello extends React.Component{
+  render(){
+    return <div style={myStyle.item}>Hello World!</div>
+  }
+};
 ```
 
+使用导入css样式表的方式来美化项目代码，在jsx文件的开头import需要的css文件，此处的css源文件因为没有向外暴露，所以这时候对它进行操作，导出的是空对象{}。	
+
+```javascript
+import mystyle from "./style.css"
+console.log(mystyle);//输出{}。原因是style.css文件没有向外暴露【即没有export default】，因此此时mystyle是一个空对象。如果此处导入的是一个由export default的js文件，那么就会输出内容了。
+```
+
+#### **<u>直接导入css样式表，默认是全局生效的，也就是说对整个项目都是生效的。</u>**因为css没有独立作用域，而js有独立作用域。只要在任何独立组件之中用到了某个css样式表，那么这个css样式表默认在全局（包括其他该项目的独立组件）都可以用到。这样就会造成样式冲突的问题。要如何解决这个问题？
+
+在vue中，也存在css样式冲突的问题。可以通过添加scoped指令：`<style scoped></style>`的方式来解决。但是react当中没有指令的概念。
