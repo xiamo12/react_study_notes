@@ -70,7 +70,21 @@ css文件没有作用域，如果在一个组件里面引入一个css文件，�
 use:["style-loader","css-loader?modules"]//通过？追加参数modules，启用css样式模块化。
 ```
 
+**<u>使css样式表模块化的重点：</u>**安装style-loader,css-loader并配置；在use里为css-loader通过？追加参数modules；
+
+将css模块化处理之后，在目标组件里引入css文件的时候，用`className={mystyle.title}`的格式引入css样式。
+
+`mystyle`表示在jxs里import进入的文件`import mystyle from "./style.css"`，`title`表示css样式里面的类名。
+
+css模块化只对类选择器和ID选择器有效，对标签选择器无效。
+
+```javascript
+<div className={mystyle.title}>Hello world!</div>
+<div id={mystyle.myid}>Hello world!</div>
+```
 
 
 
 
+
+步骤：打开配置文件，为css-loader后面用？追加modules启用模块化。这样每个模块在使用的时候只需在头部导入该css文件，在标签上写上className={模块名称.类名/id名}；
