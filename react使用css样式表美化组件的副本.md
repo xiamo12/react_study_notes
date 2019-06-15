@@ -195,33 +195,50 @@ class App extends React.Component{
    $ sudo cnpm install sass-loader node-sass -D
    ```
 
-   ### 总结一下：
+   步骤：
 
-   在项目中启用样式表模块化，并使用第三方css样式表：
+   - 为自己的样式表定位为.scss文件，第三方文件依然是.css文件；
 
+   - 只为自己的.scss文件启用模块化
+
+   - 加载sass-loader和node-loader -D
+
+   - 在config.js文件里编写配置
+
+     ```
+  {test: /\.css$/, use:["style-loader", "css-loader"]},
+     {test:/\.scss$/, use:["style-loader", "css-loader?modules&localIdentName=[path][name]-[local]-[hash:5]", "sass-loader"]}
+  ```
+   
+     
+   
+### 总结一下：
+   
+在项目中启用样式表模块化，并使用第三方css样式表：
+   
    - 把自己的样式表定位为`.scss`文件
-
-   - 第三方的样式表还是以`.css`结尾
-
+   
+- 第三方的样式表还是以`.css`结尾
+   
    - 只需要为自己的`.scss`启用模块化即可：
-
+   
    - 在终端运行`$ sudo cnpm install sass-loader node-sass -D`安装能够解析scss文件的loader
-
+   
    - 在配置文件里配置sass-loader
-
+   
    - ```javascript
      {test:/\.scss$/,use:["style-loader","css-loader","sass-loader"]}//打包处理scss文件的loader
      ```
-
+   
      要使得样式表自定义生成模块化的类名：
-
+   
      ```javascript
      {test:/\.scss$/,use:["style-loader", "css-loader?modules&[path][name]-[local][hash:5]", "sass-loader"]}
      ```
-
+   
      
 
-
+每次使用&localIdentName=[path][name]-[local]-[hash:5]时，终端会报错
 
 
 
