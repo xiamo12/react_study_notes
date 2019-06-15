@@ -84,3 +84,48 @@ class App extends React.Component{
 
   ## react中绑定文本框与state中的值
 
+在为文本框绑定数据的时候，如果只是把state的数据绑定在了value上，那么该数据就是只读的。如果要让要么设置改数据为readOnly，要么为该数据设置onChange()函数
+
+```javascript
+<input value={this.state.msg} />
+```
+
+在react中，文本框的数据绑定是单向的。也就是this.state的值可以在UI界面上表示出来。如果需要双向绑定，需要手动监听文本的onChange()方法，然后拿到最新的文本框打出来的值，最后再经this.setState()方法绑定到this.state上面。
+
+获取value文本框内容的两种方式：
+
+- #### 方法一、给箭头函数一个参数e
+
+```javascript
+render(){
+  return <div>
+    <input value={this.state.msg} onChange={ (e)=>{this.myChange(e)} } />
+    </div>
+}
+
+myChange(e){
+  this.setState({
+    msg: e.target.value,//将this.state.msg的值设置为实时获取的文本框value值。
+  })
+  console.log(e.target.value)//输出文本框的内容
+}
+```
+
+事件参数e，它的target代表它的源，它的源在这里就是指的就是这个文本框。
+
+- #### 方法二、使用ref参数：
+
+  如果想要获取元素的引用，就用`this.refs.引用元素名称`
+
+  ⚠️我在使用这一方法的时候程序报错了
+
+```javascript
+...//render(){}函数内部
+<input value={this.state.msg} onChange={(e)=>{this.myfunction(e)}} ref="txt"/>
+...
+
+myfunction = (e)=>{
+  console.log(this.refs.txt)
+}
+```
+
