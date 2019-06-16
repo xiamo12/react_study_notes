@@ -369,5 +369,27 @@ myDelete = (index)=>{
 }
 ```
 
+## jsx语法细节补充
 
+- 大写字母开头的标签，实际上我们把它当成是一个组件
 
+- jsx语法当中的注释格式：{/*   */}。如果要用`//`来写注释的话，就要把注释写成单行的格式。
+
+- 如果想要在jsx的input输入框里面写标签，同时希望标签不被转译，那么就要在标签显示出来的位置标签写上`dangerouslySetInnerHTML={{}}`【外层花括号表示这是一个表达式，里层表示这是一个js对象。】
+
+- ```javascript
+  <ul>
+    {this.state.list.map((item,index) => {
+      return (<li key={index} dangerouslySetInnerHTML={{__html:item}}> {item} </li>)
+    })}
+  </ul>
+  ```
+
+- <label></label>里的for属性用htmlFor代替：
+
+- ```JavaScript
+  <label htmlFor="inputArea">输入内容</label>
+  <input id="inputArea" value={this.state.inputValue} />
+  ```
+
+  

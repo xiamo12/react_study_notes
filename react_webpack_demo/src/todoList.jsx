@@ -32,11 +32,16 @@ class todoList extends React.Component{
   		list: list,
   	})
   }
+
+
   
   render(){
-	      return (<div>
-	          <input value={this.state.inputValue} onChange={(e)=>{this.myChange(e)}} className={mycss.inputbox}/>
+	      return (<div className={mycss.container}>
+	          <div className={mycss.box}>
+            <label htmlFor="inputArea">输入内容</label>
+            <input id="inputArea" value={this.state.inputValue} onChange={(e)=>{this.myChange(e)}} className={mycss.inputbox}/>
 	          <button onClick={()=>{this.myClick()}} className="btn btn-primary">点击提交</button>
+            </div>
 	          <ul>
 	          {this.state.list.map((item,index)=>{
 	              return (<li 
@@ -44,7 +49,9 @@ class todoList extends React.Component{
 		              onClick={this.myDelete.bind(this,index)}
 		              className={mycss.list}
 		              title="删除该行"
-		              >{item}</li>)
+                  dangerouslySetInnerHTML={{__html:item}}>
+
+                  </li>)
 	            })}
 	          </ul>
             </div>)

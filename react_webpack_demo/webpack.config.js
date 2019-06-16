@@ -12,7 +12,7 @@ module.exports = {
 	module: {
 		rules:[
 		{test:/\.js|jsx$/, use:["babel-loader"],exclude:/node_modules/},
-		{test:/\.jpg|woff|woff2|eot|svg/, use:["url-loader"]},
+		{test:/\.jpg|woff|woff2|eot|svg|png/, use:["url-loader"]},
 		{test:/\.css$/, use:["style-loader","css-loader"]},
 		{test:/\.scss$/, use:["style-loader","css-loader?modules", "sass-loader"]},
 		]
