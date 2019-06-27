@@ -111,3 +111,168 @@ src目录：项目开发时最重要的目录，放着项目所有的源代码�
 
 一个页面可以拆分成很多个组件。将页面拆分成组件便于代码的编写和维护。这就是前端组件化的概念
 
+
+
+## todolist增删列表项的功能
+
+```javascript
+import React from 'react';
+// import ReactDOM from "react-dom";
+import mystyle from './style/index.scss'
+
+
+class TodoList extends React.Component{
+  constructor(){
+    super();
+    this.state = {
+      inputValue: "",
+      list: [1,2,3]
+    }
+  }
+
+  handleInputChange(e){
+    this.setState({
+      inputValue: e.target.value
+    })
+  }
+
+  handleBtnClick(){
+    this.setState({
+      list:[...this.state.list, this.state.inputValue],//把数组原来的项目展开，同时添加从input框里获取的新项目，添加到该数组里面
+      inputValue: ""//添加完新的输入项之后，清空输入框
+    })
+  }
+
+  handleItemdelete(index){
+    const list = [...this.state.list];//拷贝list数组到list中
+    list.splice(index, 1);//删除被点击的这个list元素
+    this.setState({
+      list: list
+    })
+  }
+
+  render(){
+    return <div>
+    <input value={this.state.inputValue} onChange={this.handleInputChange.bind(this)}/>
+    <button onClick={this.handleBtnClick.bind(this)}>提交</button>
+    <ul>
+    {this.state.list.map( (item,index)=> {
+      return <li key={index} onClick={this.handleItemdelete.bind(this, index)} title="点击删除">{item}</li>
+    })}
+    </ul>
+    </div>
+  }
+}
+
+export default TodoList;
+
+```
+
+jsx里的注释：{/* */}，html的多行注释外面放一层花括号。
+
+jsx的语法里面，如果要用变量或者表达式，就要给该变量/表达式套上花括号{}
+
+jsx里底层的一个占位符组件：`<Fragment></Fragment>`。大写字母开头的是一个组件，小写字母开头的是普通的元素
+
+jsx里用className代替class表示类名，用htmlFor代替label标签的for属性。
+
+输入框里输入标签。要使标签不被转译，可以用dangerouslySetInnerHTML={{__html: item}}【危险设置】【外层花括号表示这是一个js表达式，内层表示一个js对象】
+
+
+
+## 拆分组件与组件之间的传值
+
+创建新的下一层组件TodoItem.js
+
+此时顶层组件为TodoList.js，包含了TodoItem组件
+
+通过属性的形式，从父组件传递要显示的数据给子组件。用props属性的形式传递。
+
+```html
+//父组件中
+<ul>
+  {this.state.list.map((item, index)=>{return <div>
+  <TodoItem content={item}></TodoItem>
+  </div>})}
+</ul>
+//子组件中
+class TodoItem extends React.Component{
+  constructor(){}
+  render(){
+    return <div>{this.props.content}</div>
+  }
+}
+```
+
+表示当我们使用子组件`TodoItem`的时候，将list中的`item`项传递给`content`,组件见通过`this.props.content`
+
+父组件向子组件传递内容，通过props的方式；父组件写属性，子组件通过`this.props.content`的方式引用父组件的该content属性的内容
+
+子组件如何调用父组件的方法，来更改父组件的内容。
+
+子组件如何调用父组件方法，然后更改父组件里的数据呢？
+
+父组件里设置属性，子组件里用{this.props.propertyName}来传递
+
+本节主要介绍了父子组件之间如何传递值和方法。父组件向子组件传值：将值以属性的形式写在父组件中，在子组件中通过`this.props.property`访问；
+
+子组件通过this.props.action(this.props.property)的语法来接收父组件传递过来的方法。注意在父组件中，传递方法时要绑定this 的指向。
+
+```javascript
+//父组件中
+render(){
+  return (<div>
+    <TodoItem content={item} index={index} deleteItem={this.handleItemDelete.bind(this)}><\TodoItem>
+  </div>)
+}
+```
+
+TodoList代码优化
+
+做结构赋值
+
+```
+this.props.content ==> 
+const content = {this.props};
+然后写this.props.content的地方改成{ content };
+```
+
+this指向的绑定建议放在顶部constructor函数内部。
+
+```
+constructor(props){
+  super(props);
+  this.state = {};
+  this.myfunction = this.myfunction.bind(this)//将myfunction函数的this指向该组件
+}
+```
+
+旧版的setState()里接受一个对象作为参数；
+
+新版的setState()里可以接收一个函数作为参数：setState( ()=> { return { inputValue: e.target.value}})
+
+setState里面如果传入一个函数，那么这个函数可以接受一个`prevState`参数。这个参数表示修改这个数据之前，这个数据`state`是什么。也就是`prevState`可以指代`this.state`。
+
+如果对数组项进行循环迭代，那么循环中的每一项我们需要给它一个key值，来确定每一项都是不重复的。key值应该放在循环的最外层元素上。
+
+
+
+## 围绕react衍生出来的思考
+
+react是一种声明式的开发方式。与之相对应的是命令式的开发方式。
+
+react是面向数据来编程的，只要数据构建好了，react会根据数据来构建网站。react可以帮助我们节约掉操作dom部分的代码。
+
+react可以与其它jquery等其它框架并存，每个库只管理自己负责的那部分代码。
+
+react的开发，是一种组件式的开发。我们通过class继承component来定义一个react组件。组件标签以大写字母开头，普通元素的标签以小写字母开头。
+
+一个完整的组件是一个树状结构。
+
+react之中如何做父子组件的通信：
+
+- 父组件的属性和方法通过props传递给子组件；
+- 子组件如果想要传值给父组件，可以通过调用父组件传递过来的方法。
+- 单向数据流：父组件可以向子组件传值，但是子组件只能使用这个值，不能改变这个值。因为如果数据流是双向的，那么如果一个父组件里包含了多个子组件，多个子组件又引用了父组件的同一个属性，如果这个数据出现了bug，很难排查bug出现在哪里，不利于代码的调试。
+- 如果子组件要修改父组件的值，那么需要在子组件中调用父组件传递过来的方法，底层的修改操作依然是由父组件来进行的。
+- react是一个视图层的框架
