@@ -591,4 +591,64 @@ github地址上查看文档，首先安装react-transition-group：
 $ yarn add react-transition-group
 ```
 
-CSSTransition的使用：CSSTransition是一个动画组件。首先用它包裹需要应用动画的
+CSSTransition的使用：CSSTransition是一个动画组件。首先用它包裹需要应用动画的元素
+
+```javascript
+ import React, { Component, Fragment } from "react";
+
+
+//组件的头部导入这个动画组件
+import { CSSTrinsition } from "react-transition-group";
+//导入css文件
+import "./App.css"
+
+
+class App extends Component{
+  
+  render(){
+    return (<Fragment>//占位符元素，不显示在dom树里
+      <CSSTransition 
+            in={this.state.show} 
+            timeout={1000} 
+            classNames="fade"
+            onEntered={(el)=>{el.style.color="blue"}}>//el表示被包裹的这个元素，在这里即为div。表示fade-enter-done的时候执行的代码
+              appear={true}
+      <div>hello</div> //外层被CSSTransition组件包裹。
+      </CSSTransition>
+      <button onClick={this.handleToggle}>toggle</button>
+    </Fragment>)
+  }
+  
+}
+
+```
+
+```css
+/*css文件代码*/
+.fade-enter,.fade-appear{/*在入场动画的第一帧增加类.fade-active*/
+  opacity: 0;
+}
+.fade-enter-active,.fade-appear-active{/*在入场动画的第二帧以及入场动画执行的过程中增加类.fade-appear-active*/
+  opacity: 0.5;
+  transition: opacity 1s ease-in;
+}
+.fade-enter-done{
+  opacity: 1;
+}
+.fade-exit{
+  opacity: 1;
+  color: red;
+}
+.fade-exit-active{
+  opacity: 0.5;
+  color: blue;
+  transition: opacity 2s ease-in;
+}
+.fade-exit-done{
+  opacity: 0;
+  transition: opacity 2s ease-in;
+  color: green
+}
+
+```
+
