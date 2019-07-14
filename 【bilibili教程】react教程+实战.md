@@ -542,3 +542,53 @@ $ sudo cnpm install axios
 ## 使用charles实现本地数据模拟
 
 使用ajax处理请求返回的数据。使用charles实现本地数据的模拟
+
+
+
+## react中使用css3过渡动画
+
+用到css3的属性transition
+
+```css
+.show{
+  transition: width 2s ease-in/*规定把效果作用到哪个属性上；规定效果的时长；规定效果的时间曲线以慢速开始*/
+}
+```
+
+## react中使用css3动画效果
+
+```css
+.show{
+  animation: firstClass 2s ease-in forwards;/*forwards表示*/
+}
+
+@keyframes firstClass{
+  0% {
+    width:100px;
+    height:100px;
+    background-color:orange;
+  }
+  50% {
+    width:150px;
+    height:150px;
+    background-color:red;
+  }
+  100% {
+    width:200px;
+    height:200px;
+    background-color:blue;
+  }
+}
+```
+
+以上两种设置动画的方式，其局限性在于，涉及到js动画的时候就无法处理了。
+
+## react-transition-group实现动画
+
+github地址上查看文档，首先安装react-transition-group：
+
+```
+$ yarn add react-transition-group
+```
+
+CSSTransition的使用：CSSTransition是一个动画组件。首先用它包裹需要应用动画的
