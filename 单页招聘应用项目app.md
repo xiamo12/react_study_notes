@@ -936,6 +936,8 @@ router.post("/login",function(req,res){
 
 - findByIdAndUpdate()：根据id找到匹配项，然后进行数据更新。此方法可以接收三个参数：1⃣️指定的id值；2⃣️要更改的属性的新值；3⃣️处理函数.处理函数接收两个参数，第一个是错误信息处理，第二个是根据id查到到的旧值。
 
+- Remove()：根据id找到匹配项，然后删除该匹配项。此方法可以接收的参数包括：1⃣️查找条件；2⃣️回调函数。回调函数接收两个参数，第一个参数error表示执行错误，第二个参数doc表示执行成功之后的信息：是否成功，以及删除了几条数据/文档。
+
   ```javascript
   function testSave(){
     const userModel = new UserModel({username:"xiamo", password:"123", type:"laoban"});
@@ -953,4 +955,508 @@ router.post("/login",function(req,res){
   }
   ```
 
+  ## 注册/登陆前台的处理
+
+注册/登陆的前台处理包括三个部分：数据交互ajax、管理状态redux、组件component使用户能够操作
+
+### 数据请求ajax
+
+- 在前端代码文件夹下下载依赖包axios
+
+  ```
+  $ sudo cnpm install axios --save
+  ```
+
+- 编写api文件夹下的ajax.js文件和index.js文件。其中ajax.js使用axios封装了一个ajax请求函数，返回一个Promise对象；index.js包含n个接口请求函数的模块，是接口的默认模块。每个函数返回的都是Promise对象【引入ajax函数，每个函数对应一个接口】
+
+- 封装ajax请求，指定默认请求方式为GET。【代码逻辑中规定如果为GET则执行get请求，如果是POST则执行post请求。】
+
+- 发送请求需要知道请求的url，请求方法，请求的参数【url, get/post, data】。
+
+  ```javascript
+  import axios from "axios";
   
+  export default function ajax(url,data={},type="GET"){
+    if(type === "GET"){
+      let paramStr = "";
+      Object.keys(data).forEach(key =>{
+        paramStr += key + "=" + data[key] + "&";
+      });
+      if(paramStr){
+        paramStr = paramStr.subString(0, paramStr.length-1); //去除最后一个"&"
+      }
+      return axios.get(url);
+    }else{
+      return axios.post(url,data);
+    }
+  }
+  ```
+
+  隐藏与提交、修改数据可以用POST请求；查询数据一般用GET请求。
+
+### 管理状态redux
+
+从后台返回的数据都要进行存储，以便进行管理。我们可以用redux来管理数据。
+
+- 编写redux/reducers函数reducers是根据老的state和action返回新的state
+
+- 用await/async。await表示希望得到异步结果。一旦用await去获取异步结果，await语句所在的函数就必须声明成async：
+
+  ```javascript
+  async dispath => {
+    const await reqRegister
+  }
+  ```
+
+- Redux/reducers：
+
+  ```javascript
+  // 包含多个reducer函数，根据老的state和指定的action返回新的state
+  import { combineReducers } from "redux";
+  import { AUTH_SUCCESS, ERROR_MSG } from "./actions.js";
+  const initUser = {
+  	username: "", //用户名
+  	type: "dashen",//用户类型。不需要初始化密码，因为密码不会被后台返回
+  	msg: "", //错误提示信息
+  }
+  //产生user状态的reducer
+  function user(state=initUser, action){
+  	switch (action.type){
+  		case AUTH_SUCCESS: //data是user
+  		return {...state, action.data } //解析以前的状态state，然后用action.data将以前的状态覆盖掉
+  		case ERROR_MSG:  //data是msg
+  		return { ...state, msg:action.data}
+  		default:
+  		return state
+  	}
+  }
+  export default combineReducers({ user });
+  
+  //向外暴露的项目结构{ user: {} }
+  ```
+
+- Redux/actions.js 
+
+  - action是把数据从应用传递到store的有效载荷，它是store数据的唯一来源。
+
+  - 一般会通过store.dispatch()将数据从action传到store；
+
+  - action里必须要有一个type字段来表示将要执行的动作，这个type字段通常是一个字符串常量。如果要执行的动作多，建议使用单独的action-type模块或者文件来存放action。
+
+  - 应该尽量减少在action中传递的数据。
+
+  - action创建函数就是生成action的方法。不要混淆两者的概念。redux中的action创建函数返回一个action。
+
+  - 在传统的flux实现中，当调用action创建函数时，一般会触发一个dispatch。
+
+    ```javascript
+    function addTodoWithDispath(text){
+      const action = {
+        type: ADD_TODO,
+        text
+      }
+      dispath(action)
+    }
+    ```
+
+  - 而在Redux当中，只需把action创建函数的结果传给dispatch()方法即可发起一次dispath过程。
+
+    ```javascript
+    const AUTH_SUCCESS = "auth_success";
+    const authsuccess = (user) => ({ type: AUTH_SUCCESS, data: user });
+    
+    dispatch(authsuccess(user))
+    ```
+
+    
+
+  - 语法：
+
+    ```javascript
+    const ADD_TODO = 'ADD_TODO'; //定义在action文件或者单独的action-type文件里。
+    {
+      type: ADD_TODO,
+      text: "hello world!"   
+    }
+    ```
+
+    
+
+  ```javascript
+  // 包含多个action creator：异步action和同步action
+  import { AUTH_SUCCESS, ERROR_MSG } from "./action-types";
+  import { reqRegister, reqLogin } from "../api/index.js";
+  //授权成功的同步action，返回的是一个对象
+  const authsuccess = (user) => ({ type: AUTH_SUCCESS, data: user}); //无论注册成功还是登陆成功，要管理的信息都是user。
+  //错误提示信息的同步action,返回的是一个对象
+  const errormsg = ()=> ({ type: ERROR_MSG, data: msg});
+  //注册的异步action.此action返回的是一个函数
+  export const register = (user)=> {
+  	return async dispath => {
+  		//发送注册的异步ajax请求
+  		const response = await reqRegister(user);
+  		const result = response.data;//data数据包括code，data
+  		if (result.code === 0) {//注册成功
+  			//分发授权成功的同步action
+  			dispath(authsuccess(result.data));
+  		}else{//注册失败
+  			dispath(errormsg(result.msg));
+  		}
+  	}
+  }
+  //登陆的异步action.此action返回的是一个函数
+  export const login = (user)=> {
+  	return async dispath => {
+  		//发送注册的异步ajax请求
+  		const response = await reqLogin(user);
+  		const result = response.data;//data数据包括code，data
+  		if (result.code === 0) {//登陆成功
+  			//分发授权成功的同步action
+  			dispath(authsuccess(result.data));
+  		}else{//注册失败
+  			dispath(errormsg(result.msg));
+  		}
+  	}
+  }
+  ```
+
+- action-types
+
+  ```javascript
+  // 包含多个action type名称
+  export const AUTH_SUCCESS = "auth_success"; //登陆/注册成功
+  export const ERROR_MSG = "error_msg"; //错误提示信息 请求前/请求后都可能产生
+  ```
+
+### 前台组件代码components
+
+前台之前写好的组件Register/Login/Main都是UI组件，不能直接跟redux进行交互。需要将当前组件包装生成一个容器组件.
+
+❌Register组件的编写当中，最后用react-redux的API- ->connect进行
+
+```
+// 注册路由组件
+
+import React,{ Component } from "react";
+import Logo from "../../components/logo/logo"
+import { 
+	NavBar, 
+	WingBlank, 
+	WhiteSpace,
+	List, 
+	InputItem,
+	Radio,
+	Button } from "antd-mobile";
+
+import { connect } from "react-redux";
+import { register } from "../../redux/actions";
+const ListItem = List.Item;
+
+
+class Register extends Component{ //Register组件是一个UI组件，不能直接跟redux进行交互
+	state = {
+		username: "", //用户名
+		password: "", //密码
+		password2: "", //确认密码
+		type: "dashen" //用户类型
+	}
+	//点击注册调用
+	register = ()=>{
+		// console.log(this.state)
+		this.props.register(this.state); //包含了四个数据。
+	}
+
+
+	//处理输入数据的改变，更新对应的状态
+	handleChange = (name,val)=>{
+		this.setState({
+			[name] : val //属性名不是name，而是name的值。用中括号装起来，它就是一个变量，否则是一个字符串。
+		})
+	}
+
+	toLogin = ()=>{
+		this.props.history.replace('/login');
+	}
+
+
+	render(){
+		const { type } = this.state;
+		return <div>
+			<NavBar>夏&nbsp;末</NavBar>
+			<Logo />
+			<WingBlank>
+			<WhiteSpace/>
+				<List>
+					<InputItem placeholder="请输入用户名" onChange={ val =>{this.handleChange("username", val)} }>用户名：</InputItem>
+					<InputItem placeholder="请输入密码" type="password" onChange={ val =>{this.handleChange("password", val)} }>密&nbsp;&nbsp;&nbsp;码：</InputItem>
+					<InputItem placeholder="校验密码" type="password" onChange={ val =>{this.handleChange("password2", val)} }>确认密码：</InputItem>
+					<ListItem>
+						<span>用户类型：&nbsp;&nbsp;</span>
+						<Radio checked={type === "dashen"} onClick={()=>this.handleChange("type","dashen")}>大神
+						&nbsp;&nbsp;&nbsp;</Radio>
+						<Radio checked={type === "laoban"} onClick={()=>this.handleChange("type","laoban")}>老板</Radio>
+					</ListItem>
+					<WhiteSpace/>
+					<Button type="primary" onClick={this.register}>注册</Button>
+					<Button onClick={this.toLogin}>已有账户</Button>
+				</List>
+			</WingBlank>
+		</div>
+	}
+}
+
+export default connect( //包装容器组件，传入注册函数register
+	state => ({}), //{}里指定要传的数据
+	{register} //向UI组件Register传递了一个register函数
+	)(Register);
+```
+
+运行报错：
+
+```
+Invariant Violation: Element ref was specified as a string (wrappedInstance) but no owner was set. This could happen for one of the following reasons:
+1. You may be adding a ref to a function component
+2. You may be adding a ref to a component that was not created inside a component's render method
+3. You have multiple copies of React loaded
+```
+
+[react多副本问题的解决办法](https://github.com/reactjs/reactjs.org/blob/master/content/warnings/refs-must-have-owner.md)
+
+这个问题还没解决【2019-8-1  14:00:00】，先看接下来的视频
+
+### 解决跨域问题
+
+客户端的端口号3000，服务器端口号4000，当前后端端口号不同时产生跨域请求，由于浏览器的同源策略【同一协议名、主机名、端口号为同一域名。有一个不同就是不同域名】
+
+解决跨域问题有四种方法：jsop、cors、使用代理服务器、例如nginx反向代理、使用websocket通讯
+
+jsop：只支持GET请求；
+
+cors：要改服务器
+
+代理服务器：拦截并转发浏览器的请求给服务器，再将返回的结果传给浏览器。我们这个例子中使用代理服务器。
+
+配置ajax请求的代理：package.json
+
+```
+"poxy": "http://localhost4000";
+```
+
+表示将请求转发到这个地址。
+
+❌：register.js中的代码报错：
+
+```javascript
+register = ()=>{
+  this.props.register(this.state)
+}
+//控制台报错：
+ //this.props.register is not a function at Register.register (register.jsx:29)
+```
+
+显示this.props.register不是函数。
+
+❌前端代码npm start运行报错，显示react-app-rewired  is not commond.
+
+📓：解决办法：移除node_modules文件，然后重新npm install加载。
+
+❌npm start运行成功之后页面报错：
+
+```
+Uncaught TypeError: Cannot read property 'hasOwnProperty' of undefined
+```
+
+![Snip20190801_29](/Users/luofei/Pictures/Snip20190801_29.png)
+
+此问题尚未解决。
+
+问题解决了【2019-8-1  16:03:00】
+
+📓：问题出在react-dom里。这里用的react版本为15.6.2，而react-dom版本为16.8.6。将react版本降低的原因是之前加载rudux时出现错误，为了解决报错问题降低了react版本，使得redux可以正常运行。但没有更改react-dom的版本。
+
+因此将react-dom改成和react版本一致就解决问题了:)
+
+- ❌redux报错：
+
+```
+TypeError: Cannot read property 'shape' of undefined：
+```
+
+- 📓解决办法：
+
+```
+$ sudo cnpm install react@15.6.2 -S
+```
+
+- ❌react-dom报错：
+
+```
+Uncaught TypeError: Cannot read property 'hasOwnProperty' of undefined
+```
+
+- 📓解决办法：
+
+```
+sudo cnpm install react-dom@15.6.2 -S
+```
+
+ 页面发送注册请求，由于浏览器的同源策略，前台端口号为3000，后台为4000，会导致请求404.可以用代理服务器来解决这个问题。
+
+代理服务器可以拦截和转发前台发送的请求给后台，再将后台的响应数据发送给前台。代理服务器设置方法：
+
+```json
+//package.json文件里
+
+"proxy": "http://localhost:4000" //告诉代理服务器，去请求端口号为4000的地址
+```
+
+❌设置失败,重新npm start显示错误404。
+
+📓：原因：在package.json设置完 "proxy": "http://localhost:4000"之后，需要重新启动服务器才能生效。cd到后台文件夹下，重新npm start启动服务器。
+
+此时如果没有发送注册请求就点击“注册”，页面出示提示信息：用户名需指定；
+
+如果重复注册信息，点击“注册”，页面出现提示信息：此用户已存在；
+
+如果注册时两次密码不一致，那么会出现提示信息：2次密码要一致！
+
+我们需要在点击“注册”成功之后，跳转到主页面。因此还需要做这部分代码的编写：
+
+reducers.js添加代码 【数据处理界面】
+
+```javascript
+const initUser = {
+  ...
+  //添加一条信息
+  redirectTo: "" //指定需要自动重定向的路由路径- ->指定页面要跳转到哪里去
+}
+...
+case AUTH_SUCCESS: //data是user
+			return { ...action.data, redirectTo: "/"} //添加redirectTo: "/main"
+```
+
+register.js添加代码： 【注册路由界面】
+
+```javascript
+import { Redirect } from "react-router-dom";
+···
+const { msg, redirectTo } = this.props.user;
+if(redirectTo){
+  return <Redirect to={redirectTo} />
+}
+  	···
+  
+export default connect( //包装容器组件，传入注册函数register
+state => ({user: state.user}), //{}里指定要传的数据。组件读取状态值，当注册成功时成功跳转；失败时在注册列表上方出现提示信息。
+{register} //向UI组件Register传递了一个register函数
+)(Register);
+```
+
+login.jsx代码添加方式与register.js基本一致：
+
+```javascript
+//
+import { login } from "../../redux/actions";
+import { Redirect } from "react-router-dom"; //渲染Redirect标签可实现自动重定向
+//	
+···
+render(){
+  //
+   const { msg, redirectTo } = this.props.user;
+     if (redirectTo) {
+      return <Redirect to={redirectTo}></Redirect>
+    }
+  //
+  return <div>···</div>
+}
+```
+
+前台组件写好之后，开始写信息页面。创建两个信息容器，一个放置laoban-info，一个放置dashen-info：
+
+1. 编写laoban-info静态页面路由组件laoban-info.jsx
+
+   ```javascript
+   //containers/laoban-info/laoban-info.jsx
+   import React,{ Component } from "react";
+   import { connect } from "react-redux";
+   
+   class LaobanInfo extends Component{
+     render(){
+       return (
+         <div></div>
+       )
+     }
+   }
+   
+   export default connect(
+     state =>({}),
+     {} //放置action
+   )(LaobanInfo)
+   ```
+
+2. 编写dashen-info静态页面路由组件dashen-info.jsx
+
+   ```javascript
+   //containers/dashen-info/dashen-info.jsx
+   // 大神信息完善的路由容器组件
+   
+   import React, { Component } from "react";
+   import { connect } from "react-redux";
+   class DashenInfo extends Component{
+   	render(){
+   		return (
+   			<div></div>
+   		)
+   	}
+   }
+   
+   //最后将它包装成容器组件
+   export default connect(
+   	state =>({}),
+   	{} //放置action
+   ```
+
+   3. 路由组件需要先注册。laoban-info和dashen-info是一级路由main下面的子路由。因此需要在main组件里面进行处理:
+
+   ```javascript
+   //containers/main/main.jsx
+   // 主界面路由组件
+   
+   import React,{ Component } from "react";
+   import { Switch, Route } from "react-router-dom"; //Switch用于切换，Route是路由
+   import DashenInfo from "../dashen-info/dashen-info.jsx";//导入DashenInfo组件
+   import LaobanInfo from "../laoban-info/laoban-info.jsx";//导入LaobanInfo组件
+   
+   class Main extends Component{
+   	render(){
+   		return <div>
+   			<Switch>
+   				<Route path="/dasheninfo" component={ DashenInfo } />
+   				<Route path="/laobaninfo" component={ LaobanInfo } />
+   			</Switch>
+   		</div>
+   	}
+   }
+   
+   export default Main;
+   ```
+
+3. 观察老板组件和大神组件页面，发现有相同的模块。可以将相同的模块抽象成一个组件，以实现代码的复用。
+
+   ```javascript
+   // components/header-selector
+   
+   //选择用户头像的UI组件
+   import React,{ Component } from "react";
+   class HeaderSelector extends Component{
+   	render(){
+   		return <div>HeaderSelector</div>
+   	}
+   }
+   
+   export default HeaderSelector;
+   
+   ```
+
+   
+
