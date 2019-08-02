@@ -821,8 +821,9 @@ function testUpdate(){
 1. #### 在db下新建一个models文件，此文件包含多个操作数据库集合数据的Model模块
 
 ```javascript
-// 包含n个操作数据库集合数据的Model模块。
+//ggzhaopin/db/models.js
 
+// 包含n个操作数据库集合数据的Model模块。
 // 1、连接数据库
 	// 引入mongoose
 	// 连接指定数据库（url只有数据库是变化的）
@@ -856,7 +857,7 @@ function testUpdate(){
 		company: {type: String}, //公司名称
 		salary: {type: String} //工资
 	})
-	// 定义Model【与集合对应，可以操作集合】
+	// 定义Model【与集合对应，可以操作集合.model基于schema定义的数据模型进行数据操作，返回的函数模型包含对数据的处理方法】
 	const UserModel = mongoose.model('user',userSchema);
 	// 向外暴露Model。
 	//暴露方式：module.exports = xxx : 合并暴露，只暴露一次
@@ -870,18 +871,19 @@ function testUpdate(){
 
    标识登陆有两种方法：cookie和session
 
-### 注册路由
+## 后台注册路由
 
 ```javascript
+//ggzhaopin/routers/index.js,包含注册路由registrer和登陆路由login
+
 var express = require('express');
 var router = express.Router();
 const { UserModel } = require("../db/models"); //处理数据库集合数据的Model模块
-const md5 = require("blueimp-md5");
+const md5 = require("blueimp-md5"); //用于数据加密
 
 //注册路由
 router.post("/register",function(req,res){
-	//获取请求参数数据
-	const { username, password, type } = req.body;
+	const { username, password, type } = req.body; //获取请求参数数据。
 	//处理请求
 		//判断用户是否已经存在，如果存在，返回错误提示信息；如果不存在，保存信息。
 		//通过userModel查询(根据username)
@@ -890,7 +892,6 @@ router.post("/register",function(req,res){
 				res.send({code: 1, msg: "此用户已存在！"});//用户存在则通过res返回响应
 			}else{
 				//password是解构过来的数据，因此需要写成键值对的形式：password:md5(password)
-       
         //返回包含user的json格式数据，响应数据中不要携带密码
         new UserModel({username, password:md5(password), type}).save(function(err,user){
 					const data = { username, type, id: user._id };
@@ -904,7 +905,7 @@ router.post("/register",function(req,res){
 });
 ```
 
-### 登陆路由
+## 登陆路由
 
 ```javascript
 router.post("/login",function(req,res){
@@ -955,9 +956,9 @@ router.post("/login",function(req,res){
   }
   ```
 
-  ## 注册/登陆前台的处理
+## 注册/登陆前台的处理
 
-注册/登陆的前台处理包括三个部分：数据交互ajax、管理状态redux、组件component使用户能够操作
+注册/登陆的前台处理包括三个部分：和后台的数据交互ajax、管理状态redux、组件component使用户能够操作
 
 ### 数据请求ajax
 
@@ -975,7 +976,6 @@ router.post("/login",function(req,res){
 
   ```javascript
   import axios from "axios";
-  
   export default function ajax(url,data={},type="GET"){
     if(type === "GET"){
       let paramStr = "";
@@ -998,7 +998,7 @@ router.post("/login",function(req,res){
 
 从后台返回的数据都要进行存储，以便进行管理。我们可以用redux来管理数据。
 
-- 编写redux/reducers函数reducers是根据老的state和action返回新的state
+- 编写redux/reducers函数. reducers是根据老的state和action返回新的state
 
 - 用await/async。await表示希望得到异步结果。一旦用await去获取异步结果，await语句所在的函数就必须声明成async：
 
@@ -1091,6 +1091,7 @@ router.post("/login",function(req,res){
   //错误提示信息的同步action,返回的是一个对象
   const errormsg = ()=> ({ type: ERROR_MSG, data: msg});
   //注册的异步action.此action返回的是一个函数
+  
   export const register = (user)=> {
   	return async dispath => {
   		//发送注册的异步ajax请求
@@ -1130,7 +1131,7 @@ router.post("/login",function(req,res){
 
 ### 前台组件代码components
 
-前台之前写好的组件Register/Login/Main都是UI组件，不能直接跟redux进行交互。需要将当前组件包装生成一个容器组件.
+前台之前写好的组件Register/Login/Main都是UI组件，不能直接跟redux进行交互。需要将当前组件包装生成一个容器组件.用react-redux的connect方法进行包装。传递一个对象，对象包含两个参数：要传的state、登陆操作方法register
 
 ❌Register组件的编写当中，最后用react-redux的API- ->connect进行
 
@@ -1282,7 +1283,7 @@ Uncaught TypeError: Cannot read property 'hasOwnProperty' of undefined
 TypeError: Cannot read property 'shape' of undefined：
 ```
 
-- 📓解决办法：
+- 📓解决办法：降低react的版本：
 
 ```
 $ sudo cnpm install react@15.6.2 -S
@@ -1294,7 +1295,7 @@ $ sudo cnpm install react@15.6.2 -S
 Uncaught TypeError: Cannot read property 'hasOwnProperty' of undefined
 ```
 
-- 📓解决办法：
+- 📓解决办法：将react-dom和react的版本设为一致
 
 ```
 sudo cnpm install react-dom@15.6.2 -S
@@ -1338,6 +1339,7 @@ case AUTH_SUCCESS: //data是user
 register.js添加代码： 【注册路由界面】
 
 ```javascript
+//containers/register/registers.jsx
 import { Redirect } from "react-router-dom";
 ···
 const { msg, redirectTo } = this.props.user;
@@ -1355,7 +1357,7 @@ state => ({user: state.user}), //{}里指定要传的数据。组件读取状态
 login.jsx代码添加方式与register.js基本一致：
 
 ```javascript
-//
+//containers/login/login.jsx
 import { login } from "../../redux/actions";
 import { Redirect } from "react-router-dom"; //渲染Redirect标签可实现自动重定向
 //	
@@ -1443,20 +1445,402 @@ render(){
 
 3. 观察老板组件和大神组件页面，发现有相同的模块。可以将相同的模块抽象成一个组件，以实现代码的复用。
 
-   ```javascript
-   // components/header-selector
-   
-   //选择用户头像的UI组件
-   import React,{ Component } from "react";
-   class HeaderSelector extends Component{
-   	render(){
-   		return <div>HeaderSelector</div>
-   	}
-   }
-   
-   export default HeaderSelector;
-   
-   ```
+### 【2019-8-2】今日任务：P33～P43
 
-   
+- components/header-selector/header-selector.jsx代码的编写：
 
+⚠️用插值表达式表示插入的图片地址信息，不能用import，要用require；
+
+⚠️antd-mobile的List组件中renderHeader属性，属性值为一个函数，Grid的data属性，属性值为数组；columnNum属性值为number类型
+
+```javascript
+// components/header-selector/header-selector.jsx
+
+//选择用户头像的UI组件
+import React,{ Component } from "react";
+import { List, Grid } from "antd-mobile";
+class HeaderSelector extends Component{
+	constructor(props){
+		super(props);
+		//准备需要显示的头像列表数据
+		this.headerList = [];
+		for (let i = 0; i < 20; i++) {
+			this.headerList.push({
+				text: "头像" + (i+1),
+				icon: require(`./images/头像${i+1}.png`) //不能使用import；此处地址使用模版字符串，用require动态加载头像对应的地址
+			})
+		}
+	}
+	render(){
+		const listHeader = "请选择头像";
+		return <List renderHeader={ ()=> listHeader }>
+			<Grid data={this.headerList}
+				  columnNum={5}></Grid> {/*columnNum需要的数值类型是number，所以用插值表达式{}来表达*/}
+		</List>
+	}
+}
+export default HeaderSelector;
+```
+
+- dashen-info.jsx组件的完善
+
+```javascript
+//containers/dashen-info/dashen-info.jsx
+// 大神信息完善的路由容器组件
+import React, { Component } from "react";
+import { connect } from "react-redux";
+import { 
+	NavBar, 
+	InputItem, 
+	TextareaItem,
+	Button } from "antd-mobile";
+import HeaderSelector from "../../components/header-selector/header-selector"
+
+class DashenInfo extends Component{
+	render(){
+		return (
+			<div>
+				<NavBar>大神信息完善</NavBar>
+				<HeaderSelector />
+				<InputItem placeholder="求职岗位：">求职岗位：</InputItem>
+				<TextareaItem title="个人介绍：" rows={3} />
+				<Button type="primary">保存</Button>
+			</div>
+		)
+	}
+}
+//最后将它包装成容器组件
+export default connect(
+	state =>({}),
+	{} //放置action
+	)(DashenInfo);
+```
+
+laoban-info.jsx组件的完善
+
+```javascript
+//containers/laoban-info/laoban-info.jsx
+// 老板信息完善的路由容器组件
+
+import React, { Component } from "react";
+import { connect } from "react-redux";
+import { 
+	NavBar, 
+	InputItem, 
+	TextareaItem,
+	Button } from "antd-mobile";
+import HeaderSelector from "../../components/header-selector/header-selector"
+
+class LaobanInfo extends Component{
+	render(){
+		return (
+			<div>
+				<NavBar>老板信息完善</NavBar>
+				<HeaderSelector />
+				<InputItem placeholder="请输入招聘职位：">招聘职位：</InputItem>
+				<InputItem placeholder="请输入公司名称：">公司名称：</InputItem>
+				<InputItem placeholder="请输入职位薪资：">职位薪资：</InputItem>
+				<TextareaItem title="职位要求：" rows={3} />
+				<Button type="primary">保存</Button>
+			</div>
+		)
+	}
+}
+
+//最后将它包装成容器组件
+export default connect(
+	state =>({}),
+	{} //放置action
+	)(LaobanInfo);
+```
+
+✅头像容器组件`components/header-selector/header-selector.jsx`、“大神”个人信息界面`containers/dashen-info/dashen-info.jsx`、“老板”个人信息界面`containers/laoban-info/laoban-info.jsx` 的静态页面就此由antd-mobile编写完成。
+
+接下来进行laoban-info和dashen-info的组件功能完善。
+
+laoban-info.jsx:收集数据：
+
+1⃣️ 在组件内部，render函数之前定义一个state，包含laoban-info.jsx组件应该获得的信息。
+
+```
+state = {
+		header: '',
+		post: '',
+		info: '',
+		company: '',
+		salary: ''
+	}
+```
+
+2⃣️ 增加事件处理函数
+
+```javascript
+// 老板信息完善的路由容器组件
+
+import React, { Component } from "react";
+import { connect } from "react-redux";
+import { 
+	NavBar, 
+	InputItem, 
+	TextareaItem,
+	Button } from "antd-mobile";
+import HeaderSelector from "../../components/header-selector/header-selector"
+
+class LaobanInfo extends Component{
+	state = {
+		header: '',
+		post: '',
+		info: '',
+		company: '',
+		salary: ''
+	}
+	handleChange = (name, value)=>{
+		this.setState({
+			[name]: value //注意：要获取的不是name，而是name的值，所以用中括号
+		})
+	}
+	save = ()=>{
+		console.log(this.state);
+	}
+
+	render(){
+		return (
+			<div>
+				<NavBar>老板信息完善</NavBar>
+				<HeaderSelector />
+				<InputItem placeholder="请输入招聘职位：" onChange={val => {this.handleChange("post",val)}}>招聘职位：</InputItem>
+				<InputItem placeholder="请输入公司名称：" onChange={val => {this.handleChange("company",val)}}>公司名称：</InputItem>
+				<InputItem placeholder="请输入职位薪资：" onChange={val => {this.handleChange("salary",val)}}>职位薪资：</InputItem>
+				<TextareaItem title="职位要求：" rows={3} onChange={val => {this.handleChange("info",val)}} />
+				<Button type="primary" onClick={this.save}>保存</Button>
+			</div>
+		)
+	}
+}
+//最后将它包装成容器组件
+export default connect(
+	state =>({}),
+	{} //放置action
+	)(LaobanInfo);
+```
+
+这里的header是在另外一个组件容器里。状态在父组件当中。要想在dashen-info页面改变头像状态，需要设置一个函数，点击头像容器，改变其中的某个图片：
+
+```javascript
+setHeader = (header)=>{
+  this.setState({
+    header
+  })
+}
+
+render(){
+  render(){
+		return (
+			<div>
+				<NavBar>老板信息完善</NavBar>
+				<HeaderSelector setHeader={this.setHeader}/>  //增加了这一行的内容
+				<InputItem placeholder="请输入招聘职位：" onChange={val => {this.handleChange("post",val)}}>招聘职位：</InputItem>
+				<InputItem placeholder="请输入公司名称：" onChange={val => {this.handleChange("company",val)}}>公司名称：</InputItem>
+				<InputItem placeholder="请输入职位薪资：" onChange={val => {this.handleChange("salary",val)}}>职位薪资：</InputItem>
+				<TextareaItem title="职位要求：" rows={3} onChange={val => {this.handleChange("info",val)}} />
+				<Button type="primary" onClick={this.save}>保存</Button>
+			</div>
+		)
+	}
+}
+```
+
+在父组件laoban-info里设置改变header状态的函数；在子组件header-selector里引入`prop-types`
+
+```javascript
+// components/header-selector/header-selector.jsx
+//选择用户头像的UI组件
+import React,{ Component } from "react";
+import { List, Grid } from "antd-mobile";
+import PropTypes from "prop-types";
+
+class HeaderSelector extends Component{
+    ······
+	static propTypes = {
+		setHeader: PropTypes.func.isRequired
+	}
+
+	state = {
+		icon: null //放置图片对象，默认没有值
+	}
+
+	handleClick = ({text,icon})=>{
+		//更新当前组件状态
+		//调用函数更新父组件状态
+		this.setState({icon});
+		this.props.setHeader(text)
+	}
+	render(){
+		//头部界面
+		const { icon } = this.state;
+		const listHeader = !icon ? "请选择头像" : (<div>已选择头像： <img src={icon} alt="头像"/></div>);
+		return <List renderHeader={()=> listHeader}><Grid data={this.headerList} columnNum={5} onClick={this.handleClick}></Grid></List>
+	}
+}
+
+export default HeaderSelector;
+```
+
+当点击网格Grid当中的某张图片时，执行调用函数来指定图像的图片名称。将对应名称的图片放置到指定容器当中。Grid的data属性是一个数组对象，包含icon、text两个值。
+
+- 此时redux/reducers里，需要自动重定向的路由路径不再是“/”。之前指定时“/”是因为所使用的是三个一级路由。而此时main路由下面多出了dashen-info和laoban-info子路由，注册/登陆成功之后可能跳转到“dashen-info”界面，也可能跳转到“laoban-info”界面；可能需要信息完善，也可能不需要。因此此时自动重定向的界面有四种选择
+- 在utils下创建一个index.js文件，用来放置含有n个工具函数的模块。然后在其中写入读取分发路径的功能函数getRedirectTo(type, header)。在reducers里面引入这个功能函数，并使redirectTo指向getRedirectTo(type, header)。
+
+```javascript
+//utils/index.js
+
+function getRedirectTo(type, header){
+  let path = "",
+  if(type === "dashen"){ //如果选择"大神"类型，则成功后跳转到"dashen"地址
+    path = "/dashen"
+  }else{//如果选择"laoban"类型，则成功后跳转到"laoban"地址
+    path = "/laoban"
+  }
+  
+  if(!header){ //上面确定完跳转页面之后，如果没有头像，那么跳转到信息完善界面。
+    path += "info"
+  }
+}
+```
+
+自动跳转路由路径功能实现之后，接下来需要编写dashen-info和laoban-info前台与后台的交互。
+
+## 后台更新路由代码的编写：routes/index.js
+
+⚠️：清除浏览器的cookie：使用res.clearCookie("userid")。表示清除id为userid的浏览器cookie。
+
+```javascript
+//后台/routes/index.js
+······
+//更新用户信息的路由
+//此接口有两种可能。成功：返回user，失败返回msg，并提供登陆界面
+router.post('/update',function(req,res){
+	//得到提交的用户数据
+	//前面我们将user._id以userid的形式存储在浏览器里了。当发送请求的时候。浏览器会自动携带userid
+	const userid = req.cookies.userid;
+	//如果不存在，直接返回一个提示信息的结果
+	if (!userid) {
+		return res.send({code:1, msg: "请先登陆"})
+	}
+	//如果存在，则根据userid更新对应的user文档数据
+	const user = req.body; //没有_id
+	UserModel.findByIdAndUpdate({_id: userid},user,function(error,oldUser){//user是根据id值找到对应的项以后，要更新的属性
+		if(!oldUser){
+			//如果不存在user的值，通知浏览器删除userid cookie：
+			res.clearCookie("userid");
+			//返回一个提示信息
+			res.send({code:1, msg: "请先登陆"});
+		}else{
+			//准备一个返回的user数据对象
+			const { _id, username, type } = oldUser;
+			// 此时user里没有id\username\type，olduser里有这三个数据
+			const data = Object.assign(user, { _id, username, type });//对象拷贝。将后者的属性拷贝到前者中去。如果前后对象有相同的属性，那么后面覆盖前面的；否则两者属性合并成一个对象的属性
+			//返回
+			res.send({code: 0, data});
+		}
+	})
+})
+module.exports = router;
+```
+
+- 前台代码数据交互ajax.js，数据状态管理redux，前台组件components的编写
+
+  - ajax.js
+
+    ```javascript
+    //前端代码/src/api/index.js
+    export const reqUpdateUser = (user) => ajax("/update", user, "POST");
+    ```
+
+  - redux
+
+    需要一个异步更新状态的异步action，用于保存操作，在异步action里发送ajax请求接口
+
+    ```javascript
+    //redux/actions
+    
+import { AUTH_SUCCESS, ERROR_MSG, RECEIVE_USER, RESET_USER } from "./action-types";
+    import { reqRegister, reqLogin, reqUpdateUser } from "../api/index.js";
+    //接收用户的同步action
+    const receiveUser = (user)=>({type: RECEIVE_USER, data: user});
+    //重置用户的同步action
+    const resetUser = (msg)=>({type: RESET_USER, data: msg});
+    
+    //更新用户状态的异步action。此action返回一个函数
+    export const updateUser = (user) =>{
+    	return async dispatch =>{
+    		const response = await reqUpdateUser(user);
+    		const result = response.data;
+    		if (result.code === 0) {//更新成功 :data,分发一个同步action
+    			dispatch(receiveUser(result.data));
+    		}else{//更新失败： msg
+    			dispatch(resetUser(result.msg));
+    		}
+    	}
+    }
+    ```
+    
+    
+
+如果登陆之后跳转到信息完善界面，此时清除浏览器Application- ->cookies - ->id,那么信息保存失效，不会跳转到指定界面。
+
+我们需要在id保存失效的时候自动跳转到登陆界面，这个功能由main主界面来完成
+
+```javascript
+//containers/main/main.jsx
+// 主界面路由组件
+import React,{ Component } from "react";
+import { Switch, Route, Redirect } from "react-router-dom";
+import DashenInfo from "../dashen-info/dashen-info.jsx";
+import LaobanInfo from "../laoban-info/laoban-info.jsx";
+import { connect } from "react-redux";
+class Main extends Component{
+	render(){
+		//检查用户是否登陆，如果没有，自动重定向到登陆界面
+		const { user } = this.props;
+		if (!user._id) {
+			return <Redirect to='/login'/>
+		}
+		return <div>
+			<Switch>
+				<Route path="/dasheninfo" component={ DashenInfo } />
+				<Route path="/laobaninfo" component={ LaobanInfo } />
+			</Switch>
+		</div>
+	}
+}
+export default connect(
+	state => ({user: state.user})
+	)(Main)
+```
+
+## 搭建整体界面
+
+用户注册/登陆并完善信息之后，进入的界面。
+
+功能：
+
+- 底部切换按钮，不同的按钮可一切换到不同的路由组件界面。根据不同的类型，呈现相应的组件页面。
+
+- 实现自动登录的功能【通过cookie实现。cookie当中保存有用户id->userid】。userid通过发送请求得到。
+
+  1.实现自动登录。如果cookie中有userid，就自动登录。要实现自动登录，就需要发请求，获取对应的user
+  2.如果cookie中没有userid，就进入login界面。
+  3.如果已经登陆了，那么是进入完善信息的路由，还是进入主界面路由。
+  如果请求根路径，就根据type和header来计算出一个重定向的路径，自动重定向
+
+- 在main组件当中完成大部分功能
+
+  ```javascript
+  //containers/main/main.jsx
+  
+  ```
+
+  晚上回去捋清业务逻辑，
+
+### 今天学习至P40【2019-8-2  18:30:00】
