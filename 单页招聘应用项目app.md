@@ -1,4 +1,4 @@
-单页招聘应用项目app
+# 单页招聘应用项目app【P1~P39】
 
 搭建一个项目的步骤：
 
@@ -1449,9 +1449,11 @@ render(){
 
 - components/header-selector/header-selector.jsx代码的编写：
 
-⚠️用插值表达式表示插入的图片地址信息，不能用import，要用require；
+⚠️用模版字符串表示插入的图片地址信息，不能用import，要用require；
 
-⚠️antd-mobile的List组件中renderHeader属性，属性值为一个函数，Grid的data属性，属性值为数组；columnNum属性值为number类型
+⚠️antd-mobile的List组件中renderHeader属性，属性值为一个函数，Grid的data属性，属性值为数组；columnNum属性值为number类型，不能直接写成数字的形式，要写成表达式的形式
+
+⚠️react-redux提供Provider和connect。Provider是一个普通的组件，它可以作为顶层app的分发点，将state分发给所有被connect的组件，不管它们在哪里，被嵌套了多少层。
 
 ```javascript
 // components/header-selector/header-selector.jsx
@@ -1475,7 +1477,7 @@ class HeaderSelector extends Component{
 		const listHeader = "请选择头像";
 		return <List renderHeader={ ()=> listHeader }>
 			<Grid data={this.headerList}
-				  columnNum={5}></Grid> {/*columnNum需要的数值类型是number，所以用插值表达式{}来表达*/}
+				  columnNum={5}></Grid> {/*columnNum需要的数值类型是number，所以用插值表达式{}来表达,不能直接写5，会报错*/}
 		</List>
 	}
 }
@@ -1503,14 +1505,14 @@ class DashenInfo extends Component{
 				<NavBar>大神信息完善</NavBar>
 				<HeaderSelector />
 				<InputItem placeholder="求职岗位：">求职岗位：</InputItem>
-				<TextareaItem title="个人介绍：" rows={3} />
+				<TextareaItem title="个人介绍：" rows={5} />
 				<Button type="primary">保存</Button>
 			</div>
 		)
 	}
 }
 //最后将它包装成容器组件
-export default connect(
+export default connect( 
 	state =>({}),
 	{} //放置action
 	)(DashenInfo);
@@ -1686,7 +1688,7 @@ class HeaderSelector extends Component{
 export default HeaderSelector;
 ```
 
-当点击网格Grid当中的某张图片时，执行调用函数来指定图像的图片名称。将对应名称的图片放置到指定容器当中。Grid的data属性是一个数组对象，包含icon、text两个值。
+当点击网格Grid当中的某张图片时，执行调用函数来指定图像的图片名称。将对应名称的图片放置到指定容器当中。Grid的data属性是一个对象数组，每个对象包含icon、text两个值。
 
 - 此时redux/reducers里，需要自动重定向的路由路径不再是“/”。之前指定时“/”是因为所使用的是三个一级路由。而此时main路由下面多出了dashen-info和laoban-info子路由，注册/登陆成功之后可能跳转到“dashen-info”界面，也可能跳转到“laoban-info”界面；可能需要信息完善，也可能不需要。因此此时自动重定向的界面有四种选择
 - 在utils下创建一个index.js文件，用来放置含有n个工具函数的模块。然后在其中写入读取分发路径的功能函数getRedirectTo(type, header)。在reducers里面引入这个功能函数，并使redirectTo指向getRedirectTo(type, header)。
@@ -1728,7 +1730,7 @@ router.post('/update',function(req,res){
 		return res.send({code:1, msg: "请先登陆"})
 	}
 	//如果存在，则根据userid更新对应的user文档数据
-	const user = req.body; //没有_id
+	const user = req.body; //没有_id,user是获得的请求体
 	UserModel.findByIdAndUpdate({_id: userid},user,function(error,oldUser){//user是根据id值找到对应的项以后，要更新的属性
 		if(!oldUser){
 			//如果不存在user的值，通知浏览器删除userid cookie：
@@ -1819,28 +1821,17 @@ export default connect(
 	)(Main)
 ```
 
-## 搭建整体界面
 
-用户注册/登陆并完善信息之后，进入的界面。
 
-功能：
+晚上回去捋清业务逻辑。
 
-- 底部切换按钮，不同的按钮可一切换到不同的路由组件界面。根据不同的类型，呈现相应的组件页面。
+### 今天学习至P39【2019-8-2  18:30:00】
 
-- 实现自动登录的功能【通过cookie实现。cookie当中保存有用户id->userid】。userid通过发送请求得到。
+------
 
-  1.实现自动登录。如果cookie中有userid，就自动登录。要实现自动登录，就需要发请求，获取对应的user
-  2.如果cookie中没有userid，就进入login界面。
-  3.如果已经登陆了，那么是进入完善信息的路由，还是进入主界面路由。
-  如果请求根路径，就根据type和header来计算出一个重定向的路径，自动重定向
 
-- 在main组件当中完成大部分功能
 
-  ```javascript
-  //containers/main/main.jsx
-  
-  ```
 
-  晚上回去捋清业务逻辑，
 
-### 今天学习至P40【2019-8-2  18:30:00】
+
+
