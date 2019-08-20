@@ -18,8 +18,6 @@
 
 四、技术选型（当前项目用到哪些技术或者相关库）
 
-
-
 [TOC]
 
 概念：
@@ -34,17 +32,15 @@
 
 接口文档要写清除
 
-
-
 使用create-react-app初始化项目开发
 
 npm start：自动编译打包刷新，查看效果，此时并没有生成本地的打包文件
 
 npm run build：进行生产环境打包，生成本地的打包文件
 
+## 用create-react-app搭建项目结构。
 
-
-- 用create-react-app搭建项目结构。注意npm start开始自动编译打包项目文件，查看效果；npm run build是生成本地的打包文件；
+- 注意npm start开始自动编译打包项目文件，查看效果；npm run build是生成本地的打包文件；
 
 ## 引入antd mobile，安装在生产依赖 - -save里。
 
@@ -105,13 +101,13 @@ npm run build：进行生产环境打包，生成本地的打包文件
   }
   ```
 
-  在应用中使用antd-mobile组件时，injectBabelPlugin不能正常工作，出现问题：
+  ❌：在应用中使用antd-mobile组件时，injectBabelPlugin不能正常工作，出现问题：
 
   ```
   The "injectBabelPlugin" helper has been deprecated as of v2.0. You can use customize-cra plugins in replacement - https://github.com/arackaf/customize-cra#available-plugins
   ```
 
-  原因是新版本的react-app-rewired移除了injectBabelPlugin方法，并把这些方法移动到一个叫做`customize-cra`的包里，而这个包依赖于`react-app-rewired@2.x` 。所以我们需要确保`customize-cra`和`react-app-rewired@2.x`都被正常加载；同时加载`less`和`less-loader`，最后修改一下配置文件：
+  📓：原因是新版本的react-app-rewired移除了injectBabelPlugin方法，并把这些方法移动到一个叫做`customize-cra`的包里，而这个包依赖于`react-app-rewired@2.x` 。所以我们需要确保`customize-cra`和`react-app-rewired@2.x`都被正常加载；同时加载`less`和`less-loader`，最后修改一下配置文件：
 
   ```javascript
   const {
@@ -123,7 +119,7 @@ npm run build：进行生产环境打包，生成本地的打包文件
   
   module.exports = override(
     fixBabelImports("import", {
-      libraryName: "antd", libraryDirectory: "es", style: true // change importing css to less
+      libraryName: "antd-mobile", libraryDirectory: "es", style: true // change importing css to less
     }),
     addLessLoader({
       javascriptEnabled: true,
@@ -168,7 +164,7 @@ sudo cnpm install babel-plugin-import -D
 
 📒antd里的样式是用less写的，因此我们需要加载less和less-loader模块，对antd的一些样式模块进行重新打包；⚠️：less和less-loader放在开发依赖里(- -save-dev)
 
-📒实现组件的按需打包：`babel-plugin-import`，`react-app-rewired`  - -save
+📒实现组件的按需打包的插件：`babel-plugin-import`，`react-app-rewired`  - -save
 
 📒项目根目录下创建配置文件config-overrides.js
 
@@ -271,7 +267,7 @@ ReactDOM.render((<HashRouter>
 
 ⚠️：同一时间只能呈现一个一级路由，因此需要用到切换路由的功能组件`<Switch>`
 
-⚠️：路由在指定路径的情况下，执行该路由；没有指定的情况下，所有非指定路径的路由都要经过这里执行
+⚠️：路由在指定路径的情况下，执行该路由；没有指定的情况下，所有非指定路径的路由都要经过main执行
 
 ⚠️：js文件头部引入路由类型组件HashRouter、路由组件Route、切换组件Switch；路由组件Route里要写路径path和组件名component。示例`<Route path="/register" component={ Register }>`
 
@@ -1455,6 +1451,8 @@ render(){
 
 ⚠️react-redux提供Provider和connect。Provider是一个普通的组件，它可以作为顶层app的分发点，将state分发给所有被connect的组件，不管它们在哪里，被嵌套了多少层。
 
+<u>⚠️：Grid组件里的onClick函数接受两个参数：(el: Object, index: number)。第一个参数是该网格的包含内容{icon, text}，第二个参数是所点击的元素索引。</u>
+
 ```javascript
 // components/header-selector/header-selector.jsx
 
@@ -1766,6 +1764,8 @@ module.exports = router;
     ```javascript
     //redux/actions
     
+    ```
+
 import { AUTH_SUCCESS, ERROR_MSG, RECEIVE_USER, RESET_USER } from "./action-types";
     import { reqRegister, reqLogin, reqUpdateUser } from "../api/index.js";
     //接收用户的同步action
@@ -1786,8 +1786,9 @@ import { AUTH_SUCCESS, ERROR_MSG, RECEIVE_USER, RESET_USER } from "./action-type
     	}
     }
     ```
-    
-    
+
+
+​    
 
 如果登陆之后跳转到信息完善界面，此时清除浏览器Application- ->cookies - ->id,那么信息保存失效，不会跳转到指定界面。
 

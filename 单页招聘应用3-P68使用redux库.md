@@ -5,7 +5,7 @@
 - 实现mini版redux
 - 实现mini版react-redux
 
-1. 理解redux模块
+1. #### 理解redux模块
 
    1. redux模块整体是一个对象模块
 
@@ -19,16 +19,18 @@
 
          getState() //返回当前state
 
-         dispatch(action) //分发action：调用reducers()函数得到新的总state，执行所有已注册的监听函数
+         dispatch(action) //分发action：调用reducers()函数得到新的总state；执行所有已注册的监听函数
 
          subscibe(listener) //订阅监听：将监听函数保存起来
 
-- connect函数：
+- #### connect函数：
+  
   - 输出格式：export default connect( (state)=>{}, {} )(Xxx)
   - mapStateToProps：函数，用来确定一般属性。这里的map是映射的意思，将state映射到props上；
-  - mapDispatchToProps：对象，用来确定函数属性【内部会使用dispatch方法】。表示将Dispatch函数映射到props上
-
+- mapDispatchToProps：对象，用来确定函数属性【内部会使用dispatch方法】。表示将Dispatch函数映射到props上
+  
 - 透传：
+  
   - 将函数接收到的参数，原样传给内部函数调用
 
 ### 一些细节bug
@@ -53,9 +55,15 @@
 
 
 
+❌：刚登陆账号时，点击发送，无法发送消息，要刷新以下页面才行。
+
+📓：删除<InputItem>标签里的属性`style={{zIndex: -10}}`之后就可以了。
+
 ## react相关知识整理。
 
-- ref属性:  可以将它绑定到render输出的任何组件上，然后引用render()返回相应的支撑实例。可以确保总是拿到正确的实例：
+#### ref属性:  
+
+- 可以将它绑定到render输出的任何组件上，然后引用render()返回相应的支撑实例。可以确保总是拿到正确的实例：
 
 ```javascript
 handleSub = （）=>{
@@ -71,7 +79,10 @@ render(){
 }
 ```
 
+#### PropTypes属性：
 
+- 对Component定义proptypes属性，可以对Component的props属性作类型检查。
+- 语法：`name: PropTypes.string`：表示name属性必须是字符串类型的。除此之外还有array/func/string/number/bool/symbol/object
 
 
 
